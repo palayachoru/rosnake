@@ -1,0 +1,37 @@
+services:
+  rosnake_job:
+    # Build this image
+    build: .
+    image: ros2_jazzy_jalisco:v1.0
+
+    # consider the host machines user and group
+    user: "${HOST_UID}:${HOST_GID}"
+
+    # Container name while creating a container
+    container_name: rosnake
+
+    # Auto boot up container, if it's stopped
+    restart: unless-stopped
+
+    # Container share the Host's IP
+    network_mode: host
+
+    # Inter-Process communication mode setup: let container to share host's
+    # memory, this will prevent GUI from lagging or crashing
+    ipc: host
+
+    # set environment variable within container
+    # set the Host system's current display variable, so that container know
+    # where to sent the window graphics data to
+    environment:
+      - DISPLAY=${DISPLAY}
+
+    volumes:
+     # Mount the entire code folder
+     - .:/workspaces/rosnake:rw
+
+     # Share Host X11 graphical display socket
+     - /tmp/.X11-unix:/tmp/.X11-unix:rw
+
+    stdin_open: true    # open STDIN to receive keyboard inputs
+    tty: true           # allocate pseudo terminal

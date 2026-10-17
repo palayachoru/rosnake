@@ -1,0 +1,13 @@
+{
+  "name": "Rosnake",
+  "dockerComposeFile": ["../docker-compose.yml"],
+  "service": "rosnake_job",
+  "workspaceFolder": "/workspaces/rosnake",
+  "shutdownAction": "stopContainer",
+
+  "overrideCommand": true,
+
+  // avoid Zed agent to use root user
+  "containerUser": "ubuntu",
+  "remoteUser": "ubuntu"
+}

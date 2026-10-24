@@ -1,0 +1,18 @@
+{
+  "lsp": {
+    "pyright": {
+      "settings": {
+        "python": {
+          "analysis": {
+            "extraPaths": [
+              "/opt/ros/jazzy/lib/python3.12/site-packages",
+
+              // custom path for interfaces
+              "/workspaces/rosnake/install/rosnake_interfaces/lib/python3.12/site-packages"
+            ]
+          }
+        }
+      }
+    }
+  }
+}

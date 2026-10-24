@@ -1,0 +1,8 @@
+<launch>
+    <!-- Starting a turtlesim node (shows a gui with turtle movement) -->
+    <node pkg="turtlesim" exec="turtlesim_node" name="hunter">
+    </node>
+
+    <node pkg="rosnake_pkg" exec="mother" />
+    <node pkg="rosnake_pkg" exec="controller" />
+</launch>

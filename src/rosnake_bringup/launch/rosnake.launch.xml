@@ -1,8 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <launch>
     <!-- Starting a turtlesim node (shows a gui with turtle movement) -->
-    <node pkg="turtlesim" exec="turtlesim_node" name="hunter">
-    </node>
+    <node pkg="turtlesim" exec="turtlesim_node" name="hunter" />
 
+    <!-- Start the Mother Node & Spawn new turtles -->
     <node pkg="rosnake_pkg" exec="mother" />
+
+    <!-- Start the Hunter Controller Node & Spawn new turtles -->
     <node pkg="rosnake_pkg" exec="controller" />
 </launch>

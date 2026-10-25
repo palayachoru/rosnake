@@ -1,0 +1,78 @@
+3 packages
+ - for launch files
+ - for interface
+ - for core nodes
+
+--------------------------------------------------------------------------------
+
+launch file:
+ - launches turtlesim node (GUI window with hunter turtle)
+ - Mother node - spawns new turtles and remove dead turtle
+ - Controller node - Navigates hunter turtle and notify dead turtle
+
+--------------------------------------------------------------------------------
+
+ mother.py
+  publisher:
+   - list of alive turtles 'alive_turtles'
+
+  subscription:
+   - listens on topic 'dead_turtle' to know which turtle is dead
+
+  client:
+   - call Kill to remove turtle
+   - call spawn to spawn new turtle
+
+--------------------------------------------------------------------------------
+
+controller.py
+  publisher:
+   - dead turtle
+
+  subscription:
+   - turtle pos to know the current position of turtle
+   - list of live turtles
+
+--------------------------------------------------------------------------------
+
+interface
+ - Turtle state - x, y, theta
+ - Turtle state list - [Turtle state]
+
+--------------------------------------------------------------------------------
+
+Problem: More no of turtles are spawned for each kill. After 3 to 4 iterations
+         for each kill, 3 to 4 turtles are created
+
+The bug is caused by a race condition between your high-frequency Event-Driven Chasing loop and the asynchronous Kill Service Call.
+
+1. The First Collision:
+     Your charge() method calculates that the hunter is within COLLISION_LEVEL (0.2) of turtle3. It immediately publishes turtle3 to the dead_turtle topic.
+
+2. The Delayed Kill:
+     The mother node receives this message, filters its local tracking list, and fires off an asynchronous request to /kill.
+
+3. The Duplicate Firings:
+    Because call_async takes a few milliseconds to hit turtlesim and erase the turtle, turtle3 is still alive in the simulator during the next few cycles.
+
+4. Meanwhile, your hunter's pose is updating at 62 Hz. In the next millisecond, the pose callback fires again, sees that turtle3 is still the closest turtle within 0.2 units, and publishes a second (and then a third) dead_turtle message before the first kill request finishes processing!
+
+This is why turtlesim_node throws the error: Tried to kill turtle [turtle3], which does not exist—the second and third kill commands arrived after the first one successfully executed.
+
+
+Fix add a set to keep track of dead nodes and while look for close node,
+filter out alive turtle list cross comparing with dead turtles.
+
+How adding set fix the issue?
+
+1. Time 0.00ms (Pose Update #1): Hunter gets close to turtle3. The code picks turtle3 as the closest.
+	• It instantly executes: self.dead_pool.add('turtle3').
+	• It fires the dead_turtle publication once.
+
+2. Time 16.0ms (Pose Update #2): Your pose callback fires again. turtlesim is still processing the network deletion, so turtle3 is technically still in your raw self.alive list.
+	• The Magic Happens: The list comprehension runs. It checks if 'turtle3' is in self.dead_pool. It is!
+	• The code completely ignores turtle3 and filters it out. min() is forced to pick turtle4 (the next nearest living turtle).
+
+3. Time 32.0ms (Pose Update #3): The hunter completely turns its head and starts driving toward turtle4, entirely ignoring the ghost of turtle3 while the mother node and turtlesim finish executing the asynchronous background deletion.
+
+--------------------------------------------------------------------------------
